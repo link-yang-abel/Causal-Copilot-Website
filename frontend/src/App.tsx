@@ -57,7 +57,7 @@ function App() {
             <MenuIcon />
           </IconButton> */}
           <Typography fontWeight='bolder' variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Cansal Copilot
+            Welcome to Causal Copilot!
           </Typography>
           {auth && (
             <div>
