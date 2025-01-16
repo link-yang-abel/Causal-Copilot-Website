@@ -39,9 +39,15 @@ function App() {
           label={auth ? 'Logout' : 'Login'}
         />
       </FormGroup>
-      <AppBar position="static">
+      <AppBar position="static"
+        style={{
+          backgroundColor: '#fff',
+          color: 'black',
+          boxShadow: 'none'
+        }}
+      >
         <Toolbar>
-          <IconButton
+          {/* <IconButton
             size="large"
             edge="start"
             color="inherit"
@@ -49,8 +55,8 @@ function App() {
             sx={{ mr: 2 }}
           >
             <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          </IconButton> */}
+          <Typography fontWeight='bolder' variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Cansal Copilot
           </Typography>
           {auth && (
