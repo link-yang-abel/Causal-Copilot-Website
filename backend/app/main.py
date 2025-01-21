@@ -5,10 +5,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
 import os
 from json.decoder import JSONDecodeError
-
+from app.api.v1.endpoints import users
+from app.api.v1.endpoints import files
 
 load_dotenv()
-
 app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
@@ -82,6 +82,7 @@ async def home(request: Request):
 
 from app.api.v1.endpoints import users
 app.include_router(users.router, prefix="/api/v1", tags=["users"])
+app.include_router(files.router, prefix="/api/v1", tags=["files"])
 
 
 if __name__ == "__main__":
