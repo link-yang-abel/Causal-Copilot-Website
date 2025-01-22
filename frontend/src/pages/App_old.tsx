@@ -7,7 +7,7 @@ import Button from '@mui/material/Button'
 // import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
 
-import http from './utils/request'
+import http from '../utils/request'
 
 const api = {
   user: '/users/',

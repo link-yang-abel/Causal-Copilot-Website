@@ -20,6 +20,12 @@ import {
 import Button from "@mui/material/Button";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 
+import http from '../utils/request'
+
+const api = {
+  user: '/users/',
+}
+
 import "../App.css";
 
 function Start() {
@@ -37,6 +43,16 @@ function Start() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleGetUser =  async () => {
+    try {
+      const res = await http.get<any>(api.user)
+      console.log('get-user:', res)
+    } catch(error) {
+      console.error('Error get user:', error)
+    }
+  }
+
   return (
     <>
       <FormGroup>
@@ -258,6 +274,7 @@ function Start() {
             Real Dataset: Abalone Demo
           </Button>
         </Grid>
+        <Button onClick={handleGetUser}>get user</Button>
       </Container>
 
       {/* <Button variant='contained'>Hello world</Button> */}
