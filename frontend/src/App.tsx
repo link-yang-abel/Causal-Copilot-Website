@@ -4,8 +4,14 @@ import { useState } from 'react'
 // import viteLogo from '/vite.svg'
 import { Container, Card, Avatar, Typography, Grid2 as Grid, TextField, FormGroup, FormControlLabel, Switch, AppBar, Toolbar, IconButton, Menu, MenuItem } from '@mui/material'
 import Button from '@mui/material/Button'
-import MenuIcon from '@mui/icons-material/Menu'
+// import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
+
+import http from './utils/request'
+
+const api = {
+  user: '/users/',
+}
 
 import './App.css'
 
@@ -25,6 +31,15 @@ function App() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleGetUser =  async () => {
+    try {
+      const res = await http.get<any>(api.user)
+      console.log('get-user:', res)
+    } catch(error) {
+      console.error('Error get user:', error)
+    }
+  }
   return (
     <>
     <FormGroup>
@@ -216,6 +231,7 @@ function App() {
           }}
         >Real Dataset: Abalone Demo</Button>
       </Grid>
+      <Button onClick={handleGetUser}>get user</Button>
     </Container>
 
     
