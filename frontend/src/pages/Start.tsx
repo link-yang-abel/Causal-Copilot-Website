@@ -1,6 +1,9 @@
 import * as React from "react";
+import { useState, useReducer } from "react";
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
+import {makeStyles} from '@mui/styles';
+
 import {
   Container,
   Card,
@@ -20,17 +23,209 @@ import {
 import Button from "@mui/material/Button";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 
+import avatarChatbot from "../assets/avatar-chatbot.png"
+
 import http from '../utils/request'
+
+interface MessageData{
+  role: string,
+  message: string
+}
+
+type MessageAction = {
+  type: 'ADD_ITEM';
+  payload: MessageData
+}
+
+const messageListReducer = (state: MessageData[], action: MessageAction) => {
+  switch (action.type) {
+    case 'ADD_ITEM':
+      return [...state, action.payload];
+    default:
+      return state;
+  }
+}
+
+const useStyles = makeStyles({
+  typography: {
+    whiteSpace: 'pre-wrap',
+    textAlign: 'left',
+    fontFamily: 'Montserrat, ui-sans-serif, "system-ui", sans-serif'
+  }
+})
 
 const api = {
   user: '/users/',
 }
+const helloMessage = {
+  role: "chatbot",
+  message: "👋 Hello! I'm your causal discovery assistant. Want to discover some causal relationships today?\n"+
+            "⏫ Some guidances before uploading your dataset:\n"+
+            "1️⃣ The dataset should be tabular in .csv format, with each column representing a"+
+            "variable.\n"+
+            "2️⃣ Ensure that the features are in numerical format"+
+            "or appropriately encoded if categorical.\n3️⃣ For initial query,"+
+            "your dataset has meaningful feature names, please indicate it"+
+            "using 'YES' or 'NO'.\n4️⃣ Please mention heterogeneity and its"+
+            "indicator's column name in your initial query if there is any.\n"+
+            "💡 Example initial query: 'YES. Use PC algorithm to analyze"+
+            "causal relationships between variables. The dataset has"+
+            "heterogeneity with domain column named 'country'.'"
+}
 
 import "../App.css";
+
+function MessageChatbot(props:any) {
+  const classes = useStyles();
+  return (
+    <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
+            <Grid
+              container
+              size={1}
+              justifyContent="center"
+              alignItems="flex-start"
+            >
+              <Avatar src={avatarChatbot}></Avatar>
+            </Grid>
+            <Grid size={11}>
+              {/* <Card style={{width:'50%'}}> */}
+              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
+                {/* <Typography style={{whiteSpace:'pre-line'}}> */}
+                <Typography className={classes.typography}>
+                  {props.message}
+                </Typography>
+              </Card>
+            </Grid>
+          </Grid>
+  )
+}
+
+function MessageUser(props: any) {
+  const classes = useStyles();
+ return (
+    <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
+            <Grid size={11} container justifyContent="flex-end">
+              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
+                <Typography className={classes.typography} style={{ width: "auto", padding: "0 1rem" }}>
+                  {props.message}
+                </Typography>
+              </Card>
+            </Grid>
+            <Grid
+              container
+              size={1}
+              justifyContent="center"
+              alignItems="flex-start"
+            >
+              <Avatar></Avatar>
+            </Grid>
+          </Grid>
+
+ )
+}
+
 
 function Start() {
   const [auth, setAuth] = React.useState(true);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+
+  const [socket, setSocket] = React.useState<WebSocket | null>(null);
+  // const [messageList, setMessageList] = React.useState<MessageData[]>([{
+  //   ...helloMessage
+  // }])
+  const [messageList, dispath] = useReducer(messageListReducer, [helloMessage]);
+  const [message, setMessage] = useState<null|string>("")
+
+  React.useEffect(() => {
+    // const c_id = "client002";
+    // const ws = new WebSocket(`ws://localhost:8000/ws_client/${c_id}`);
+    const ws = new WebSocket(`ws://127.0.0.1:8000/workflow`);
+
+    setSocket(ws);
+  // 连接建立时触发
+  ws.onopen = () => {
+    console.log('WebSocket 连接已建立');
+  };
+
+  // 接收到消息时触发
+  ws.onmessage = (event: MessageEvent) => {
+    // setMessages(prevMessages => [...prevMessages, event.data]);
+    // console.log('event:', event);
+    const data = JSON.parse(event.data)
+    // ws.send("ok")
+    console.log(data)
+    console.log('mm:', data.data)
+    if (data.data) {
+      console.log('mm:', data.data)
+      // setMessageList([
+      //   ...messageList,
+      //   data.data
+      // ])
+      dispath({
+        type: 'ADD_ITEM',
+        payload: data.data
+      })
+      // console.log(messageList)
+    }
+  };
+
+  // 连接关闭时触发
+  ws.onclose = () => {
+    console.log('WebSocket 连接已关闭');
+  };
+
+  // 发生错误时触发
+  ws.onerror = (error) => {
+    console.error('WebSocket 发生错误:', error);
+  };
+
+  // 组件卸载时关闭 WebSocket 连接
+  return () => {
+    if (ws) {
+        ws.close();
+    }
+  };
+  }, [])
+
+  React.useEffect(()=>{
+    console.log('messageList:', messageList)
+  }, [messageList])
+
+  const handleMessageSubmit = () => {
+
+  }
+
+  const handleSendMessage = () => {
+    if (socket ) {
+        // 发送消息
+        // socket.send(inputMessage); 
+        // setInputMessage('');
+        // socket.send('hello, from frontend.'); 
+        const msg = {
+          role: "user",
+          message: "hello"
+        }
+        console.log('send msg:', msg)
+        console.log('0:', messageList)
+        // await setMessageList([
+        //   ...messageList, msg
+        // ])
+        dispath({
+          type: 'ADD_ITEM',
+          payload: msg
+        })
+        console.log('1', messageList)
+        const data = {
+          message: '',
+          upload_file: '',
+          demo: ''
+        }
+        const data_str = JSON.stringify(data)
+        socket.send(data_str)
+        // socket.send("{'msg':'hello'};")
+    }
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAuth(event.target.checked);
@@ -141,55 +336,13 @@ function Start() {
             borderRadius: ".333m",
           }}
         >
-          <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
-            <Grid
-              container
-              size={1}
-              justifyContent="center"
-              alignItems="flex-start"
-            >
-              <Avatar></Avatar>
-            </Grid>
-            <Grid size={11}>
-              {/* <Card style={{width:'50%'}}> */}
-              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
-                <Typography>
-                  👋 Hello! I'm your causal discovery assistant. Want to
-                  discover some causal relationships today? ⏫ Some guidances
-                  before uploading your dataset: 1️⃣ The dataset should be
-                  tabular in .csv format, with each column representing a
-                  variable. 2️⃣ Ensure that the features are in numerical format
-                  or appropriately encoded if categorical. 3️⃣ For initial query,
-                  your dataset has meaningful feature names, please indicate it
-                  using 'YES' or 'NO'. 4️⃣ Please mention heterogeneity and its
-                  indicator's column name in your initial query if there is any.
-                  💡 Example initial query: 'YES. Use PC algorithm to analyze
-                  causal relationships between variables. The dataset has
-                  heterogeneity with domain column named 'country'.'
-                </Typography>
-              </Card>
-            </Grid>
-          </Grid>
-
-          <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
-            <Grid size={11} container justifyContent="flex-end">
-              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
-                <Typography style={{ width: "auto", padding: "0 1rem" }}>
-                  hello
-                </Typography>
-              </Card>
-            </Grid>
-            <Grid
-              container
-              size={1}
-              justifyContent="center"
-              alignItems="flex-start"
-            >
-              <Avatar></Avatar>
-            </Grid>
-          </Grid>
+          {messageList.map((msg)=>
+            (msg.role==="chatbot"
+            ?<MessageChatbot message={msg.message}/>
+            :<MessageUser message={msg.message}/>)
+          )}
         </Grid>
-
+          
         <Grid
           container
           direction="row"
@@ -211,6 +364,9 @@ function Start() {
                 },
               },
             }}
+            value={message}
+            onChange={(e)=> setMessage(e.target.value)}
+            onSubmit={handleMessageSubmit}
           ></TextField>
           <Button
             size="small"
@@ -275,6 +431,7 @@ function Start() {
           </Button>
         </Grid>
         <Button onClick={handleGetUser}>get user</Button>
+        <Button onClick={()=>handleSendMessage()}>send ws</Button>
       </Container>
 
       {/* <Button variant='contained'>Hello world</Button> */}
