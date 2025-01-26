@@ -1,8 +1,7 @@
 import * as React from "react";
-import { useState, useReducer } from "react";
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-import {makeStyles} from '@mui/styles';
+import { useEffect, useState, useReducer } from "react";
+import { makeStyles } from '@mui/styles';
+import { styled } from '@mui/material/styles';
 
 import {
   Container,
@@ -19,13 +18,20 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Button,
 } from "@mui/material";
-import Button from "@mui/material/Button";
+
 import AccountCircle from "@mui/icons-material/AccountCircle";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import avatarChatbot from "../assets/avatar-chatbot.png"
 
 import http from '../utils/request'
+
+interface FileResponse{
+  file_name: string,
+  file_path: string
+}
 
 interface MessageData{
   role: string,
@@ -45,6 +51,25 @@ const messageListReducer = (state: MessageData[], action: MessageAction) => {
       return state;
   }
 }
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+  // textTransform: "none",
+  // color: "#777",
+  // fontSize: ".6rem",
+  // borderRadius: "1rem",
+  // padding: ".2rem 1.1rem",
+  // backgroundColor: "white",
+  // boxShadow: "1px 1px 1px 1px #eee",
+})
 
 const useStyles = makeStyles({
   typography: {
@@ -85,7 +110,7 @@ function MessageChatbot(props:any) {
               justifyContent="center"
               alignItems="flex-start"
             >
-              <Avatar src={avatarChatbot}></Avatar>
+              <Avatar src={avatarChatbot}/>
             </Grid>
             <Grid size={11}>
               {/* <Card style={{width:'50%'}}> */}
@@ -117,7 +142,7 @@ function MessageUser(props: any) {
               justifyContent="center"
               alignItems="flex-start"
             >
-              <Avatar></Avatar>
+              <Avatar/>
             </Grid>
           </Grid>
 
@@ -126,18 +151,21 @@ function MessageUser(props: any) {
 
 
 function Start() {
-  const [auth, setAuth] = React.useState(true);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [auth, setAuth] = useState(true);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
 
-  const [socket, setSocket] = React.useState<WebSocket | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   // const [messageList, setMessageList] = React.useState<MessageData[]>([{
   //   ...helloMessage
   // }])
   const [messageList, dispath] = useReducer(messageListReducer, [helloMessage]);
   const [message, setMessage] = useState<null|string>("")
 
-  React.useEffect(() => {
+  const [filename, setFilename] = useState<null|string>("")
+  const [filepath, setFilepath] = useState<null|string>("")
+
+  useEffect(() => {
     // const c_id = "client002";
     // const ws = new WebSocket(`ws://localhost:8000/ws_client/${c_id}`);
     const ws = new WebSocket(`ws://127.0.0.1:8000/workflow`);
@@ -188,12 +216,12 @@ function Start() {
   };
   }, [])
 
-  React.useEffect(()=>{
-    console.log('messageList:', messageList)
-  }, [messageList])
+  // useEffect(()=>{
+  //   console.log('messageList:', messageList)
+  // }, [messageList])
 
   const handleMessageSubmit = () => {
-
+    console.log('message submit.')
   }
 
   const handleSendMessage = () => {
@@ -204,7 +232,7 @@ function Start() {
         // socket.send('hello, from frontend.'); 
         const msg = {
           role: "user",
-          message: "hello"
+          message: message as string
         }
         console.log('send msg:', msg)
         console.log('0:', messageList)
@@ -217,8 +245,9 @@ function Start() {
         })
         console.log('1', messageList)
         const data = {
-          message: '',
-          upload_file: '',
+          message: message,
+          // upload_file: filename,
+          upload_file: filepath,
           demo: ''
         }
         const data_str = JSON.stringify(data)
@@ -226,6 +255,29 @@ function Start() {
         // socket.send("{'msg':'hello'};")
     }
   };
+
+  const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    // console.log('handleUploadFile:', event);
+    const files = event.target.files;
+    if (files && files.length>0) {
+      console.log('files:', files)
+      const formData = new FormData();
+      formData.append('file', files[0])
+      try {
+        const res = await http.postFile<FileResponse>('upload_file', formData);
+        console.log('File uploaded successfully:', res)
+        setFilename(files[0].name)
+        setFilepath(res.file_path)
+      } catch (err) {
+        setFilename("Error!")
+        console.error('Error uploading file:', err)
+      }
+
+    }
+  }
+  const handleReset = () => {
+    setFilename("")
+  }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAuth(event.target.checked);
@@ -369,6 +421,29 @@ function Start() {
             onSubmit={handleMessageSubmit}
           ></TextField>
           <Button
+            component="label"
+            role={undefined}
+            variant="contained"
+            tabIndex={-1}
+            startIcon={<CloudUploadIcon/>}
+            style={{
+              textTransform: "none",
+              color: "#777",
+              fontSize: ".6rem",
+              borderRadius: "1rem",
+              padding: ".2rem 1.1rem",
+              backgroundColor: "white",
+              boxShadow: "1px 1px 1px 1px #eee",
+            }}
+          >
+            Upload Your Data(.csv)
+            <VisuallyHiddenInput
+              type="file"
+              onChange={handleUploadFile}
+              // multiple
+            />
+          </Button>
+          {/* <Button
             size="small"
             className="btn-action"
             style={{
@@ -382,7 +457,7 @@ function Start() {
             }}
           >
             Upload Your Data(.csv)
-          </Button>
+          </Button> */}
           <Button
             size="small"
             className="btn-action"
@@ -410,6 +485,7 @@ function Start() {
               backgroundColor: "white",
               boxShadow: "1px 1px 1px 1px #eee",
             }}
+            onClick={handleReset}
           >
             Reset
           </Button>
@@ -430,6 +506,7 @@ function Start() {
             Real Dataset: Abalone Demo
           </Button>
         </Grid>
+        filename: {filename}|
         <Button onClick={handleGetUser}>get user</Button>
         <Button onClick={()=>handleSendMessage()}>send ws</Button>
       </Container>

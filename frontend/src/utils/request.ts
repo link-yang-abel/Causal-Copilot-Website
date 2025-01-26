@@ -2,7 +2,8 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 
 const instance: AxiosInstance = axios.create({
 //   baseURL: 'https://your-api-base-url.com', // 根据你的 API 地址修改
-  baseURL: 'http://127.0.0.1:8000/api/v1/', // 根据你的 API 地址修改
+  // baseURL: 'http://127.0.0.1:8000/api/v1/', // 根据你的 API 地址修改
+  baseURL: 'http://127.0.0.1:8000/', // 根据你的 API 地址修改
   timeout: 10000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json',
@@ -51,6 +52,11 @@ export const post = <T>(url: string, data?: any): Promise<T> => {
   return instance.post(url, data).then((response) => response as T);
 };
 
+// 封装 POST FILE 请求
+export const postFile = <T>(url: string, data?: any): Promise<T> => {
+  return instance.post(url, data, { headers: { 'Content-Type': 'multipart/form-data' } }).then((response) => response as T);
+}
+
 // 封装 PUT 请求
 export const put = <T>(url: string, data?: any): Promise<T> => {
   return instance.put(url, data).then((response) => response as T);
@@ -64,6 +70,7 @@ export const deleteRequest = <T>(url: string): Promise<T> => {
 export default {
   get,
   post,
+  postFile,
   put,
   deleteRequest
 }
