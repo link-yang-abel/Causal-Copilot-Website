@@ -19,6 +19,7 @@ import {
   Menu,
   MenuItem,
   Button,
+  Box,
 } from "@mui/material";
 
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -27,26 +28,62 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import avatarChatbot from "../assets/avatar-chatbot.png"
 
 import http from '../utils/request'
+import axios from "axios";
+
+import "../App.css";
+
+// const IMAGE_BASEURL = 'http://localhost:8000/demo_data/'
+// const IMAGE_BASEURL = 'http://localhost:8000/'
+const IMAGE_BASEURL = import.meta.env.VITE_FILE_URL
 
 interface FileResponse{
   file_name: string,
   file_path: string
 }
 
+interface ContentData{
+  type: string,
+  content: string
+}
+
 interface MessageData{
   role: string,
-  message: string
+  messages: ContentData[] 
 }
 
 type MessageAction = {
-  type: 'ADD_ITEM';
+  type: 'ADD_ITEM0'
+    |'ADD_ITEM'
+    |'MERGE_ELEMENTS_TO_LAST_MESSAGES';
   payload: MessageData
 }
 
 const messageListReducer = (state: MessageData[], action: MessageAction) => {
   switch (action.type) {
-    case 'ADD_ITEM':
+    case 'ADD_ITEM0':
       return [...state, action.payload];
+    case 'ADD_ITEM':
+      if (state.length <=0||state[state.length-1].role!==action.payload.role)
+        return [...state, action.payload];
+      const newState = [...state];
+      const last = newState[newState.length-1];
+      const newLast = {...last};
+      const newMessages = [...last.messages, ...action.payload.messages]
+      newLast.messages = newMessages;
+      newState[newState.length-1] = newLast;
+      return newState;
+    case 'MERGE_ELEMENTS_TO_LAST_MESSAGES':
+      if (state.length<=0)
+        return state;
+      if (state[state.length-1].role!==action.payload.role)
+        return state;
+      const newS = [...state];
+      const l = newS[newS.length-1];
+      const newL = {...l};
+      const newM = [...l.messages, ...action.payload.messages]
+      newL.messages = newM;
+      newS[newS.length-1] = newL;
+      return newS;
     default:
       return state;
   }
@@ -82,9 +119,13 @@ const useStyles = makeStyles({
 const api = {
   user: '/users/',
 }
+
 const helloMessage = {
   role: "chatbot",
-  message: "👋 Hello! I'm your causal discovery assistant. Want to discover some causal relationships today?\n"+
+  messages: [{
+    type: 'text',
+    content:
+    "👋 Hello! I'm your causal discovery assistant. Want to discover some causal relationships today?\n"+
             "⏫ Some guidances before uploading your dataset:\n"+
             "1️⃣ The dataset should be tabular in .csv format, with each column representing a"+
             "variable.\n"+
@@ -96,32 +137,58 @@ const helloMessage = {
             "💡 Example initial query: 'YES. Use PC algorithm to analyze"+
             "causal relationships between variables. The dataset has"+
             "heterogeneity with domain column named 'country'.'"
+  }]
 }
 
-import "../App.css";
+function BasicImage(props: any) {
+  return (
+    <Box sx={{ width:'auto', maxHeight:'auto'}}>
+      <img {...props} style={{maxWidth:'100%',maxHeight:'300px',objectFit:'scale-down'}}/>
+    </Box>
+  )
+}
 
 function MessageChatbot(props:any) {
   const classes = useStyles();
   return (
     <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
-            <Grid
-              container
-              size={1}
-              justifyContent="center"
-              alignItems="flex-start"
-            >
-              <Avatar src={avatarChatbot}/>
-            </Grid>
-            <Grid size={11}>
-              {/* <Card style={{width:'50%'}}> */}
-              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
-                {/* <Typography style={{whiteSpace:'pre-line'}}> */}
-                <Typography className={classes.typography}>
-                  {props.message}
-                </Typography>
-              </Card>
-            </Grid>
-          </Grid>
+      <Grid
+        container
+        size={1}
+        justifyContent="center"
+        alignItems="flex-start"
+      >
+        <Avatar src={avatarChatbot}/>
+      </Grid>
+      <Grid size={11} height="auto">
+        {/* <Card style={{width:'50%'}}> */}
+        <Card style={{ backgroundColor:"rgb(239, 241, 245)", height:'auto', maxWidth: "90%", padding: "0.2rem" }}>
+          {/* <Typography style={{whiteSpace:'pre-line'}}> */}
+          {/* <Typography className={classes.typography}>
+            {props.message}
+          </Typography> */}
+          {props.data.messages.map((msg:any)=>{
+            if (msg.type==='text') {
+              return (
+                <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                  <Typography className={classes.typography}>
+                      {msg.content}
+                  </Typography>
+                </Card>
+              )
+            } else if(msg.type==='image') {
+              return (
+                <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                {/* <img src={IMAGE_BASEURL+msg.content}/> */}
+                  <BasicImage src={IMAGE_BASEURL+msg.content}/>
+                {/* {msg.content} */}
+                </Card>
+              )
+            }
+          })}
+        </Card>
+      </Grid>
+    </Grid>
   )
 }
 
@@ -130,10 +197,29 @@ function MessageUser(props: any) {
  return (
     <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
             <Grid size={11} container justifyContent="flex-end">
-              <Card style={{ maxWidth: "90%", padding: "0.5rem" }}>
-                <Typography className={classes.typography} style={{ width: "auto", padding: "0 1rem" }}>
+              <Card style={{ backgroundColor:"rgb(239, 241, 245)", maxWidth: "90%", padding: "0.2rem" }}>
+                {/* <Typography className={classes.typography} style={{ width: "auto", padding: "0 1rem" }}>
                   {props.message}
-                </Typography>
+                </Typography> */}
+                {props.data.messages.map((msg:any)=>{
+                  if (msg.type==='text') {
+                    return (
+                      <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                        <Typography className={classes.typography}>
+                          {msg.content}
+                        </Typography>
+                      </Card>
+                    )
+                  } else if(msg.type==='image') {
+                    return (
+                      <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                        {/* <CardMedia image={IMAGE_BASEURL+msg.content}/> */}
+                        <BasicImage src={IMAGE_BASEURL+msg.content}/>
+                        {/* {msg.content} */}
+                      </Card>
+                    )
+                  }
+                })}
               </Card>
             </Grid>
             <Grid
@@ -160,10 +246,14 @@ function Start() {
   //   ...helloMessage
   // }])
   const [messageList, dispath] = useReducer(messageListReducer, [helloMessage]);
-  const [message, setMessage] = useState<null|string>("")
+  const [message, setMessage] = useState<null|string>("");
 
-  const [filename, setFilename] = useState<null|string>("")
-  const [filepath, setFilepath] = useState<null|string>("")
+  const [filename, setFilename] = useState<null|string>("");
+  const [filepath, setFilepath] = useState<null|string>("");
+
+  const [processing, setProcessing] = useState(false);
+  const [disableBtn, setDisableBtn] = useState(false);
+
 
   useEffect(() => {
     // const c_id = "client002";
@@ -181,7 +271,7 @@ function Start() {
     // setMessages(prevMessages => [...prevMessages, event.data]);
     // console.log('event:', event);
     const data = JSON.parse(event.data)
-    // ws.send("ok")
+    ws.send("ok")
     console.log(data)
     console.log('mm:', data.data)
     if (data.data) {
@@ -190,10 +280,17 @@ function Start() {
       //   ...messageList,
       //   data.data
       // ])
+      setProcessing(data.processing)
+      setDisableBtn(data.disable_btn)
+
       dispath({
         type: 'ADD_ITEM',
         payload: data.data
-      })
+      });
+
+      if (data.output_report) {
+        setFilepath(data.output_report);
+      }
       // console.log(messageList)
     }
   };
@@ -232,7 +329,10 @@ function Start() {
         // socket.send('hello, from frontend.'); 
         const msg = {
           role: "user",
-          message: message as string
+          messages: [{
+            type: 'text',
+            content: message as string
+          }]
         }
         console.log('send msg:', msg)
         console.log('0:', messageList)
@@ -240,6 +340,7 @@ function Start() {
         //   ...messageList, msg
         // ])
         dispath({
+          // type: 'MERGE_ELEMENTS_TO_LAST_MESSAGES',
           type: 'ADD_ITEM',
           payload: msg
         })
@@ -255,6 +356,12 @@ function Start() {
         // socket.send("{'msg':'hello'};")
     }
   };
+  const handleTextfieldOnKeyDown = (event: any) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSendMessage()
+    }
+  }
 
   const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // console.log('handleUploadFile:', event);
@@ -297,6 +404,28 @@ function Start() {
       console.log('get-user:', res)
     } catch(error) {
       console.error('Error get user:', error)
+    }
+  }
+
+  const handleDownload = async () => {
+    const filepath = './demo_data/20250126_235705/sachs/output_graph/initial_graph.pdf';
+    
+    try {
+      const response = await axios.post(`http://localhost:8000/download_file/`,{filepath}, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      console.log('link:', link)
+      link.href = url;
+      // link.setAttribute('download', filepath);
+      link.setAttribute('download', 'initial_graph.pdf');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+    } catch (error) {
+      console.log('dowload error:', error)
     }
   }
 
@@ -390,8 +519,8 @@ function Start() {
         >
           {messageList.map((msg)=>
             (msg.role==="chatbot"
-            ?<MessageChatbot message={msg.message}/>
-            :<MessageUser message={msg.message}/>)
+            ?<MessageChatbot data={msg}/>
+            :<MessageUser data={msg}/>)
           )}
         </Grid>
           
@@ -418,7 +547,9 @@ function Start() {
             }}
             value={message}
             onChange={(e)=> setMessage(e.target.value)}
-            onSubmit={handleMessageSubmit}
+            // onSubmit={handleMessageSubmit}
+            onKeyDown={handleTextfieldOnKeyDown}
+            disabled={disableBtn}
           ></TextField>
           <Button
             component="label"
@@ -435,6 +566,7 @@ function Start() {
               backgroundColor: "white",
               boxShadow: "1px 1px 1px 1px #eee",
             }}
+            disabled={disableBtn}
           >
             Upload Your Data(.csv)
             <VisuallyHiddenInput
@@ -470,6 +602,7 @@ function Start() {
               backgroundColor: "white",
               boxShadow: "1px 1px 1px 1px #eee",
             }}
+            disabled={disableBtn}
           >
             Download Exclusive Report
           </Button>
@@ -486,6 +619,7 @@ function Start() {
               boxShadow: "1px 1px 1px 1px #eee",
             }}
             onClick={handleReset}
+            disabled={disableBtn}
           >
             Reset
           </Button>
@@ -502,6 +636,7 @@ function Start() {
               boxShadow: "1px 1px 1px 1px #eee",
               width: "8rem",
             }}
+            disabled={disableBtn}
           >
             Real Dataset: Abalone Demo
           </Button>
@@ -509,6 +644,7 @@ function Start() {
         filename: {filename}|
         <Button onClick={handleGetUser}>get user</Button>
         <Button onClick={()=>handleSendMessage()}>send ws</Button>
+        <Button onClick={()=>handleDownload()}>download</Button>
       </Container>
 
       {/* <Button variant='contained'>Hello world</Button> */}
