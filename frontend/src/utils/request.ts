@@ -1,9 +1,12 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
+const BASE_URL = import.meta.env.VITE_BASE_URL
+
 const instance: AxiosInstance = axios.create({
 //   baseURL: 'https://your-api-base-url.com', // 根据你的 API 地址修改
   // baseURL: 'http://127.0.0.1:8000/api/v1/', // 根据你的 API 地址修改
-  baseURL: 'http://127.0.0.1:8000/', // 根据你的 API 地址修改
+  // baseURL: 'http://127.0.0.1:8000/', // 根据你的 API 地址修改
+  baseURL: BASE_URL,
   timeout: 10000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json',
