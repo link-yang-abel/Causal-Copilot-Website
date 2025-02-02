@@ -34,7 +34,7 @@ import "../App.css";
 
 // const IMAGE_BASEURL = 'http://localhost:8000/demo_data/'
 // const IMAGE_BASEURL = 'http://localhost:8000/'
-const IMAGE_BASEURL = import.meta.env.VITE_FILE_URL
+const FILE_BASEURL = import.meta.env.VITE_FILE_URL
 
 interface FileResponse{
   file_name: string,
@@ -180,10 +180,18 @@ function MessageChatbot(props:any) {
               return (
                 <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
                 {/* <img src={IMAGE_BASEURL+msg.content}/> */}
-                  <BasicImage src={IMAGE_BASEURL+msg.content}/>
+                  <BasicImage src={FILE_BASEURL+msg.content}/>
                 {/* {msg.content} */}
                 </Card>
               )
+            } else if(msg.type==='file') {
+              return (
+                <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                  <a href={FILE_BASEURL+msg.content} target="_blank">{msg.content}</a>
+                </Card>
+              )
+            } else {
+              <></>
             }
           })}
         </Card>
@@ -214,7 +222,7 @@ function MessageUser(props: any) {
                     return (
                       <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
                         {/* <CardMedia image={IMAGE_BASEURL+msg.content}/> */}
-                        <BasicImage src={IMAGE_BASEURL+msg.content}/>
+                        <BasicImage src={FILE_BASEURL+msg.content}/>
                         {/* {msg.content} */}
                       </Card>
                     )
@@ -250,6 +258,8 @@ function Start() {
 
   const [filename, setFilename] = useState<null|string>("");
   const [filepath, setFilepath] = useState<null|string>("");
+
+  const [reportPath, setReportPath] = useState<null|string>("");
 
   const [processing, setProcessing] = useState(false);
   const [disableBtn, setDisableBtn] = useState(false);
@@ -289,7 +299,7 @@ function Start() {
       });
 
       if (data.output_report) {
-        setFilepath(data.output_report);
+        setReportPath(data.output_report);
       }
       // console.log(messageList)
     }
@@ -406,9 +416,27 @@ function Start() {
       console.error('Error get user:', error)
     }
   }
+  const handleDownloadReport = async () => {
+    // const testpath = './demo_data/20250202_203204/sachs/output_report/report.pdf';
+    // const filepath = FILE_BASEURL + testpath;
+    // if (true) {
+    if (reportPath) {
+      const filepath = FILE_BASEURL + reportPath;
+      const a = document.createElement('a');
+      a.href = filepath;
+      a.download = 'report.pdf';
+      a.target = '_blank';
+
+      a.click();
+    }
+  }
 
   const handleDownload = async () => {
-    const filepath = './demo_data/20250126_235705/sachs/output_graph/initial_graph.pdf';
+    console.log('handle download:');
+    // const filepath = './demo_data/20250126_235705/sachs/output_graph/initial_graph.pdf';
+    const testpath = './demo_data/20250202_203204/sachs/output_report/report.pdf';
+    const filepath = reportPath;
+    console.log(filepath);
     
     try {
       const response = await axios.post(`http://localhost:8000/download_file/`,{filepath}, {
@@ -419,7 +447,7 @@ function Start() {
       console.log('link:', link)
       link.href = url;
       // link.setAttribute('download', filepath);
-      link.setAttribute('download', 'initial_graph.pdf');
+      link.setAttribute('download', 'report.pdf');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -603,6 +631,7 @@ function Start() {
               boxShadow: "1px 1px 1px 1px #eee",
             }}
             disabled={disableBtn}
+            onClick={handleDownloadReport}
           >
             Download Exclusive Report
           </Button>
@@ -641,10 +670,12 @@ function Start() {
             Real Dataset: Abalone Demo
           </Button>
         </Grid>
-        filename: {filename}|
+        {/* filename: {filename}|<br/>
+        ReportPath: {reportPath}<br/>
+        <a href={FILE_BASEURL+reportPath||''} target="_blank" >report</a>
         <Button onClick={handleGetUser}>get user</Button>
         <Button onClick={()=>handleSendMessage()}>send ws</Button>
-        <Button onClick={()=>handleDownload()}>download</Button>
+        <Button onClick={()=>handleDownloadReport()}>download</Button> */}
       </Container>
 
       {/* <Button variant='contained'>Hello world</Button> */}
