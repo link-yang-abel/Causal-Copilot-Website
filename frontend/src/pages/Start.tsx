@@ -34,7 +34,8 @@ import "../App.css";
 
 // const IMAGE_BASEURL = 'http://localhost:8000/demo_data/'
 // const IMAGE_BASEURL = 'http://localhost:8000/'
-const FILE_BASEURL = import.meta.env.VITE_FILE_URL
+const FILE_BASEURL = import.meta.env.VITE_FILE_URL;
+const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
 
 interface FileResponse{
   file_name: string,
@@ -140,6 +141,33 @@ const helloMessage = {
   }]
 }
 
+interface DemoDatasetData {
+  name: string,
+  btn_name: string
+}
+
+const demo_datasets = [
+  {
+    name: "Abalone",
+    btn_name: "🐚 Real Dataset:Abalone"
+  },{
+    name: "Sachs",
+    btn_name: "🧬 Real Dataset: Sachs",
+  },{
+    name: "CCS Data",
+    btn_name: "📊 Real Dataset: CCS Data",
+  },{
+    name: "Ozone",
+    btn_name: "🌫️ Real Dataset: Ozone", 
+  },{
+    name: "Linear_Gaussian",
+    btn_name: "🟦 Simualted Data: Linear Gaussian",
+  },{
+    name: "Linear_Nongaussian",
+    btn_name: "🟩 Simulated Data: Linear Non-Gaussian",
+  }
+]
+
 function BasicImage(props: any) {
   return (
     <Box sx={{ width:'auto', maxHeight:'auto'}}>
@@ -204,41 +232,41 @@ function MessageUser(props: any) {
   const classes = useStyles();
  return (
     <Grid container spacing={1} style={{ margin: "0.5rem 0" }}>
-            <Grid size={11} container justifyContent="flex-end">
-              <Card style={{ backgroundColor:"rgb(239, 241, 245)", maxWidth: "90%", padding: "0.2rem" }}>
-                {/* <Typography className={classes.typography} style={{ width: "auto", padding: "0 1rem" }}>
-                  {props.message}
-                </Typography> */}
-                {props.data.messages.map((msg:any)=>{
-                  if (msg.type==='text') {
-                    return (
-                      <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
-                        <Typography className={classes.typography}>
-                          {msg.content}
-                        </Typography>
-                      </Card>
-                    )
-                  } else if(msg.type==='image') {
-                    return (
-                      <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
-                        {/* <CardMedia image={IMAGE_BASEURL+msg.content}/> */}
-                        <BasicImage src={FILE_BASEURL+msg.content}/>
-                        {/* {msg.content} */}
-                      </Card>
-                    )
-                  }
-                })}
-              </Card>
-            </Grid>
-            <Grid
-              container
-              size={1}
-              justifyContent="center"
-              alignItems="flex-start"
-            >
-              <Avatar/>
-            </Grid>
-          </Grid>
+      <Grid size={11} container justifyContent="flex-end">
+        <Card style={{ backgroundColor:"rgb(239, 241, 245)", maxWidth: "90%", padding: "0.2rem" }}>
+          {/* <Typography className={classes.typography} style={{ width: "auto", padding: "0 1rem" }}>
+            {props.message}
+          </Typography> */}
+          {props.data.messages.map((msg:any)=>{
+            if (msg.type==='text') {
+              return (
+                <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                  <Typography className={classes.typography}>
+                    {msg.content}
+                  </Typography>
+                </Card>
+              )
+            } else if(msg.type==='image') {
+              return (
+                <Card style={{ backgroundColor:"inherit", margin: "0.2rem", padding: "0.5rem" }}>
+                  {/* <CardMedia image={IMAGE_BASEURL+msg.content}/> */}
+                  <BasicImage src={FILE_BASEURL+msg.content}/>
+                  {/* {msg.content} */}
+                </Card>
+              )
+            }
+          })}
+        </Card>
+      </Grid>
+      <Grid
+        container
+        size={1}
+        justifyContent="center"
+        alignItems="flex-start"
+      >
+        <Avatar/>
+      </Grid>
+    </Grid>
 
  )
 }
@@ -264,65 +292,127 @@ function Start() {
   const [processing, setProcessing] = useState(false);
   const [disableBtn, setDisableBtn] = useState(false);
 
+  const [demos, _] = useState<DemoDatasetData[]>(demo_datasets);
 
-  useEffect(() => {
-    // const c_id = "client002";
-    // const ws = new WebSocket(`ws://localhost:8000/ws_client/${c_id}`);
-    const ws = new WebSocket(`ws://127.0.0.1:8000/workflow`);
+  const init_websocket = () => {
+    const url = `${WEBSOCKET_URL}/workflow`
+    const ws = new WebSocket(url);
 
     setSocket(ws);
-  // 连接建立时触发
-  ws.onopen = () => {
-    console.log('WebSocket 连接已建立');
-  };
+    // 连接建立时触发
+    ws.onopen = () => {
+      console.log('WebSocket 连接已建立');
+    };
 
-  // 接收到消息时触发
-  ws.onmessage = (event: MessageEvent) => {
-    // setMessages(prevMessages => [...prevMessages, event.data]);
-    // console.log('event:', event);
-    const data = JSON.parse(event.data)
-    ws.send("ok")
-    console.log(data)
-    console.log('mm:', data.data)
-    if (data.data) {
+    // 接收到消息时触发
+    ws.onmessage = (event: MessageEvent) => {
+      // setMessages(prevMessages => [...prevMessages, event.data]);
+      // console.log('event:', event);
+      const data = JSON.parse(event.data)
+      ws.send("ok")
+      console.log(data)
       console.log('mm:', data.data)
-      // setMessageList([
-      //   ...messageList,
-      //   data.data
-      // ])
-      setProcessing(data.processing)
-      setDisableBtn(data.disable_btn)
+      if (data.data) {
+        console.log('mm:', data.data)
+        // setMessageList([
+        //   ...messageList,
+        //   data.data
+        // ])
+        setProcessing(data.processing)
+        setDisableBtn(data.disable_btn)
 
-      dispath({
-        type: 'ADD_ITEM',
-        payload: data.data
-      });
+        dispath({
+          type: 'ADD_ITEM',
+          payload: data.data
+        });
 
-      if (data.output_report) {
-        setReportPath(data.output_report);
+        if (data.output_report) {
+          setReportPath(data.output_report);
+        }
+        // console.log(messageList)
       }
-      // console.log(messageList)
-    }
-  };
+    };
 
-  // 连接关闭时触发
-  ws.onclose = () => {
-    console.log('WebSocket 连接已关闭');
-  };
+    // 连接关闭时触发
+    ws.onclose = () => {
+      console.log('WebSocket 连接已关闭');
+    };
 
-  // 发生错误时触发
-  ws.onerror = (error) => {
-    console.error('WebSocket 发生错误:', error);
-  };
+    // 发生错误时触发
+    ws.onerror = (error) => {
+      console.error('WebSocket 发生错误:', error);
+    };
 
-  // 组件卸载时关闭 WebSocket 连接
-  return () => {
-    if (ws) {
-        ws.close();
-    }
-  };
+    // 组件卸载时关闭 WebSocket 连接
+    return ws;
+  } 
+
+
+  useEffect(() => {
+    // const ws = init_websocket();
+    init_websocket();
+    // const url = `${WEBSOCKET_URL}/workflow`
+    // const ws = new WebSocket(url);
+
+    // setSocket(ws);
+    // // 连接建立时触发
+    // ws.onopen = () => {
+    //   console.log('WebSocket 连接已建立');
+    // };
+
+    // // 接收到消息时触发
+    // ws.onmessage = (event: MessageEvent) => {
+    //   // setMessages(prevMessages => [...prevMessages, event.data]);
+    //   // console.log('event:', event);
+    //   const data = JSON.parse(event.data)
+    //   ws.send(JSON.stringify({msg:"ok"}))
+    //   console.log(data)
+    //   console.log('mm:', data.data)
+    //   if (data.data) {
+    //     console.log('mm:', data.data)
+    //     // setMessageList([
+    //     //   ...messageList,
+    //     //   data.data
+    //     // ])
+    //     setProcessing(data.processing)
+    //     setDisableBtn(data.disable_btn)
+
+    //     dispath({
+    //       type: 'ADD_ITEM',
+    //       payload: data.data
+    //     });
+
+    //     if (data.output_report) {
+    //       setReportPath(data.output_report);
+    //     }
+    //     // console.log(messageList)
+    //   }
+    // };
+
+    // // 连接关闭时触发
+    // ws.onclose = () => {
+    //   console.log('WebSocket 连接已关闭');
+    // };
+
+    // // 发生错误时触发
+    // ws.onerror = (error) => {
+    //   console.error('WebSocket 发生错误:', error);
+    // };
+
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+      // if (ws) {
+      //   ws.close();
+      // }
+    };
   }, [])
 
+
+    // const c_id = "client002";
+    // const ws = new WebSocket(`ws://localhost:8000/ws_client/${c_id}`);
   // useEffect(()=>{
   //   console.log('messageList:', messageList)
   // }, [messageList])
@@ -331,8 +421,26 @@ function Start() {
     console.log('message submit.')
   }
 
-  const handleSendMessage = () => {
+  const sendMessage = (data: any) => {
+    // 发送消息
+    // const data = {
+    //   message: message,
+    //   // upload_file: filename,
+    //   upload_file: filepath,
+    //   demo: ''
+    // }
+    const data_str = JSON.stringify(data)
     if (socket ) {
+      socket.send(data_str)
+      // socket.send("{'msg':'hello'};")
+    } else {
+      const ws = init_websocket()
+      ws.send(data_str)
+    }
+  }
+
+  const handleSendMessage = () => {
+    // if (socket ) {
         // 发送消息
         // socket.send(inputMessage); 
         // setInputMessage('');
@@ -361,16 +469,26 @@ function Start() {
           upload_file: filepath,
           demo: ''
         }
-        const data_str = JSON.stringify(data)
-        socket.send(data_str)
+        sendMessage(data);
+        // const data_str = JSON.stringify(data)
+        // socket.send(data_str)
         // socket.send("{'msg':'hello'};")
-    }
+    // }
   };
   const handleTextfieldOnKeyDown = (event: any) => {
     if (event.key === 'Enter') {
       event.preventDefault();
       handleSendMessage()
     }
+  }
+  
+  const handleDemo = (demo_name: string) => {
+    const data = {
+      message: '',
+      upload_file: '',
+      demo: demo_name
+    }
+    sendMessage(data)
   }
 
   const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -654,21 +772,25 @@ function Start() {
           </Button>
         </Grid>
         <Grid>
-          <Button
-            className="btn-demo"
-            style={{
-              textTransform: "none",
-              color: "black",
-              fontSize: ".8rem",
-              fontWeight: "bolder",
-              backgroundColor: "white",
-              boxShadow: "1px 1px 1px 1px #eee",
-              width: "8rem",
-            }}
-            disabled={disableBtn}
-          >
-            Real Dataset: Abalone Demo
-          </Button>
+          {demos.map((demo) => (
+            <Button
+              className="btn-demo"
+              style={{
+                textTransform: "none",
+                color: "black",
+                fontSize: ".8rem",
+                fontWeight: "bolder",
+                backgroundColor: "white",
+                boxShadow: "1px 1px 1px 1px #eee",
+                width: "8rem",
+                margin: ".2rem",
+              }}
+              disabled={disableBtn}
+              onClick={()=>handleDemo(demo.name)}
+            >
+              {demo.btn_name}
+            </Button>
+          ))}
         </Grid>
         {/* filename: {filename}|<br/>
         ReportPath: {reportPath}<br/>
