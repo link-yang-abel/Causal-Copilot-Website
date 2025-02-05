@@ -8,6 +8,12 @@ class UserBase(BaseModel):
     oauth_id: str
     role_id: str
 
+class UserCreate(UserBase):
+    pass
+
+class UserUpdate(UserBase):
+    pass
+
 class User(UserBase):
     id: int
     created_at: datetime
