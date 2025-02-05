@@ -7,7 +7,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-print('start:')
+print('alembic start:')
 # load .env
 load_dotenv()
 #
@@ -33,7 +33,7 @@ elif db_type == 'postgresql':
     url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 else:
     raise ValueError("Unsupported database type in .env file.")
-
+print('url:', url)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -52,6 +52,8 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
+from app.models.user import User
+from app.models.user import OperationRecord
 from app.db.base import Base
 target_metadata = Base.metadata
 
