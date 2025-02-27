@@ -28,7 +28,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import avatarChatbot from "../assets/avatar-chatbot.png"
 
 import http from '../utils/request'
-import axios from "axios";
+// import axios from "axios";
 
 import "../App.css";
 
@@ -117,9 +117,9 @@ const useStyles = makeStyles({
   }
 })
 
-const api = {
-  user: '/users/',
-}
+// const api = {
+//   user: '/users/',
+// }
 
 const helloMessage = {
   role: "chatbot",
@@ -284,15 +284,17 @@ function Start() {
   const [messageList, dispath] = useReducer(messageListReducer, [helloMessage]);
   const [message, setMessage] = useState<null|string>("");
 
-  const [filename, setFilename] = useState<null|string>("");
+  // const [filename, setFilename] = useState<null|string>("");
+  const [, setFilename] = useState<null|string>("");
   const [filepath, setFilepath] = useState<null|string>("");
 
   const [reportPath, setReportPath] = useState<null|string>("");
 
-  const [processing, setProcessing] = useState(false);
+  // const [processing, setProcessing] = useState(false);
+  const [, setProcessing] = useState(false);
   const [disableBtn, setDisableBtn] = useState(false);
 
-  const [demos, _] = useState<DemoDatasetData[]>(demo_datasets);
+  const [demos, ] = useState<DemoDatasetData[]>(demo_datasets);
 
   const init_websocket = () => {
     const url = `${WEBSOCKET_URL}/workflow`
@@ -417,9 +419,9 @@ function Start() {
   //   console.log('messageList:', messageList)
   // }, [messageList])
 
-  const handleMessageSubmit = () => {
-    console.log('message submit.')
-  }
+  // const handleMessageSubmit = () => {
+  //   console.log('message submit.')
+  // }
 
   const sendMessage = (data: any) => {
     // 发送消息
@@ -526,14 +528,14 @@ function Start() {
     setAnchorEl(null);
   };
 
-  const handleGetUser =  async () => {
-    try {
-      const res = await http.get<any>(api.user)
-      console.log('get-user:', res)
-    } catch(error) {
-      console.error('Error get user:', error)
-    }
-  }
+  // const handleGetUser =  async () => {
+  //   try {
+  //     const res = await http.get<any>(api.user)
+  //     console.log('get-user:', res)
+  //   } catch(error) {
+  //     console.error('Error get user:', error)
+  //   }
+  // }
   const handleDownloadReport = async () => {
     // const testpath = './demo_data/20250202_203204/sachs/output_report/report.pdf';
     // const filepath = FILE_BASEURL + testpath;
@@ -549,31 +551,31 @@ function Start() {
     }
   }
 
-  const handleDownload = async () => {
-    console.log('handle download:');
-    // const filepath = './demo_data/20250126_235705/sachs/output_graph/initial_graph.pdf';
-    const testpath = './demo_data/20250202_203204/sachs/output_report/report.pdf';
-    const filepath = reportPath;
-    console.log(filepath);
+  // const handleDownload = async () => {
+  //   console.log('handle download:');
+  //   // const filepath = './demo_data/20250126_235705/sachs/output_graph/initial_graph.pdf';
+  //   // const testpath = './demo_data/20250202_203204/sachs/output_report/report.pdf';
+  //   const filepath = reportPath;
+  //   console.log(filepath);
     
-    try {
-      const response = await axios.post(`http://localhost:8000/download_file/`,{filepath}, {
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      console.log('link:', link)
-      link.href = url;
-      // link.setAttribute('download', filepath);
-      link.setAttribute('download', 'report.pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  //   try {
+  //     const response = await axios.post(`http://localhost:8000/download_file/`,{filepath}, {
+  //       responseType: 'blob'
+  //     });
+  //     const url = window.URL.createObjectURL(new Blob([response.data]));
+  //     const link = document.createElement('a');
+  //     console.log('link:', link)
+  //     link.href = url;
+  //     // link.setAttribute('download', filepath);
+  //     link.setAttribute('download', 'report.pdf');
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     document.body.removeChild(link);
 
-    } catch (error) {
-      console.log('dowload error:', error)
-    }
-  }
+  //   } catch (error) {
+  //     console.log('dowload error:', error)
+  //   }
+  // }
 
   return (
     <>

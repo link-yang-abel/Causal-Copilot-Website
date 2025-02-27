@@ -21,3 +21,24 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+class OperationRecordBase(BaseModel):
+    ip_address: str
+    operation_category: int
+    filename: str
+    time: datetime
+    user_id: int
+
+class OperationRecordCreate(OperationRecordBase):
+    pass
+
+class OperationRecordUpdate(OperationRecordBase):
+    pass
+
+class OperationRecord(OperationRecordBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
